@@ -1,7 +1,9 @@
-<template> <VueEditor :editor="editor" /> </template>
+<template> 
+  <VueEditor :editor="editor" />
+</template>
 
 <script lang="ts">
-  import { Editor, rootCtx, defaultValueCtx, createCmdKey } from '@milkdown/core'
+  import { Editor, rootCtx, defaultValueCtx, createCmdKey, editorViewOptionsCtx, editorViewCtx, serializerCtx } from '@milkdown/core'
   import { nord } from '@milkdown/theme-nord'
   import { VueEditor, useEditor } from '@milkdown/vue'
   import { commonmark } from '@milkdown/preset-commonmark'
@@ -33,6 +35,10 @@
         type: String,
         default: ''
       },
+      readonly: {
+        type: Boolean,
+        default: true
+      },
       menu: {
         type: Array as PropType<MenuType[]>,
         default: () => ['diagram', 'tooltip', 'math', 'upload', 'slash', 'menu']
@@ -40,17 +46,20 @@
     },
     emits: ['beforeMount', 'mounted', 'updated', 'markdownUpdated', 'blur', 'focus', 'destory'],
     setup(props, { emit }) {
-      const { defaultValue } = toRefs(props)
+      const { defaultValue, readonly } = toRefs(props)
 
       const { config } = useMilkDownConfig()
 
       const enableKey = (type: MenuType): boolean => props.menu.includes(type)
+
+      const editable = () => !readonly.value;
 
       const editor = useEditor((root) => {
         const instance = Editor.make()
           .config((ctx) => {
             ctx.set(rootCtx, root)
             ctx.set(defaultValueCtx, defaultValue.value)
+            ctx.set(editorViewOptionsCtx, { editable })
             ctx
               .get(listenerCtx)
               .beforeMount((ctx) => {
